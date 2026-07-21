@@ -1,0 +1,545 @@
+{
+  "asOf": "2026-07-21",
+  "totalNames": 122,
+  "regime": {
+    "label": "NEUTRAL",
+    "cls": ""
+  },
+  "pct20": 45.1,
+  "pct50": 59.0,
+  "pct200": 59.0,
+  "newHi20": 17,
+  "newHi52": 9,
+  "newHighs": 17,
+  "newLows": 13,
+  "up3": 6,
+  "down3": 4,
+  "themes": [
+    {
+      "name": "Cybersecurity",
+      "count": 3,
+      "score": 100,
+      "delta": 0.0,
+      "status": "DOMINANT"
+    },
+    {
+      "name": "Regional Banks",
+      "count": 4,
+      "score": 92,
+      "delta": -2.3,
+      "status": "DOMINANT"
+    },
+    {
+      "name": "Agriculture",
+      "count": 3,
+      "score": 85,
+      "delta": 12.9,
+      "status": "STRONG"
+    },
+    {
+      "name": "Software Infrastructure",
+      "count": 10,
+      "score": 84,
+      "delta": 12.5,
+      "status": "STRONG"
+    },
+    {
+      "name": "Energy",
+      "count": 7,
+      "score": 83,
+      "delta": -9.7,
+      "status": "FADING"
+    },
+    {
+      "name": "Financials",
+      "count": 7,
+      "score": 81,
+      "delta": -5.5,
+      "status": "STRONG"
+    },
+    {
+      "name": "China Tech",
+      "count": 6,
+      "score": 75,
+      "delta": 14.9,
+      "status": "STRONG"
+    },
+    {
+      "name": "Biotech",
+      "count": 7,
+      "score": 69,
+      "delta": -12.6,
+      "status": "FADING"
+    },
+    {
+      "name": "Consumer Momentum",
+      "count": 6,
+      "score": 65,
+      "delta": 0.9,
+      "status": "STRONG"
+    },
+    {
+      "name": "Shipping",
+      "count": 2,
+      "score": 59,
+      "delta": -1.3,
+      "status": "STRONG"
+    },
+    {
+      "name": "Defensives",
+      "count": 8,
+      "score": 46,
+      "delta": -13.6,
+      "status": "FADING"
+    },
+    {
+      "name": "Housing",
+      "count": 4,
+      "score": 33,
+      "delta": -1.1,
+      "status": "DETERIORATING"
+    },
+    {
+      "name": "Media & Streaming",
+      "count": 4,
+      "score": 24,
+      "delta": -13.1,
+      "status": "DETERIORATING"
+    },
+    {
+      "name": "EV/Autonomy",
+      "count": 6,
+      "score": 22,
+      "delta": -7.8,
+      "status": "DETERIORATING"
+    },
+    {
+      "name": "Industrials",
+      "count": 3,
+      "score": 21,
+      "delta": 1.6,
+      "status": "WEAK"
+    },
+    {
+      "name": "Semiconductors",
+      "count": 8,
+      "score": 17,
+      "delta": 7.2,
+      "status": "WEAK"
+    },
+    {
+      "name": "Robotics",
+      "count": 6,
+      "score": 16,
+      "delta": -5.4,
+      "status": "DETERIORATING"
+    },
+    {
+      "name": "Datacenter REITs",
+      "count": 3,
+      "score": 7,
+      "delta": -9.2,
+      "status": "DETERIORATING"
+    },
+    {
+      "name": "Gold Miners",
+      "count": 3,
+      "score": 4,
+      "delta": 3.5,
+      "status": "WEAK"
+    },
+    {
+      "name": "Optics",
+      "count": 2,
+      "score": 3,
+      "delta": 2.5,
+      "status": "WEAK"
+    }
+  ],
+  "idx": [
+    {
+      "t": "SPY",
+      "s": "SPX",
+      "d1": -0.16,
+      "d5": -0.95,
+      "dist50": -0.2,
+      "atrExt": -0.4
+    },
+    {
+      "t": "QQQ",
+      "s": "NDX",
+      "d1": 0.1,
+      "d5": -2.2,
+      "dist50": -3.1,
+      "atrExt": -2.6
+    },
+    {
+      "t": "IWM",
+      "s": "R2K",
+      "d1": -0.59,
+      "d5": -0.4,
+      "dist50": 0.8,
+      "atrExt": 1.3
+    },
+    {
+      "t": "RSP",
+      "s": "EQUAL WEIGHT SPX",
+      "d1": -0.45,
+      "d5": -0.84,
+      "dist50": 1.7,
+      "atrExt": 3.7
+    },
+    {
+      "t": "DIA",
+      "s": "DJIA",
+      "d1": -0.55,
+      "d5": -1.22,
+      "dist50": 1.2,
+      "atrExt": 2.9
+    }
+  ],
+  "etfs": [
+    {
+      "t": "XLK",
+      "d1": 0.07,
+      "d5": -3.07,
+      "rvol": 0.62
+    },
+    {
+      "t": "XLF",
+      "d1": -0.39,
+      "d5": -0.05,
+      "rvol": 1.08
+    },
+    {
+      "t": "XLE",
+      "d1": 0.45,
+      "d5": 2.11,
+      "rvol": 0.88
+    },
+    {
+      "t": "XLV",
+      "d1": -1.14,
+      "d5": -1.34,
+      "rvol": 0.57
+    },
+    {
+      "t": "XLI",
+      "d1": -0.72,
+      "d5": -1.25,
+      "rvol": 0.85
+    },
+    {
+      "t": "XLY",
+      "d1": -0.72,
+      "d5": -1.23,
+      "rvol": 0.84
+    },
+    {
+      "t": "XLP",
+      "d1": -0.39,
+      "d5": 0.32,
+      "rvol": 0.72
+    },
+    {
+      "t": "XLU",
+      "d1": -0.51,
+      "d5": -1.71,
+      "rvol": 0.93
+    },
+    {
+      "t": "XLB",
+      "d1": -0.99,
+      "d5": -1.09,
+      "rvol": 0.98
+    },
+    {
+      "t": "XLRE",
+      "d1": -0.42,
+      "d5": 1.19,
+      "rvol": 0.63
+    },
+    {
+      "t": "XLC",
+      "d1": 0.14,
+      "d5": -0.71,
+      "rvol": 0.52
+    },
+    {
+      "t": "SMH",
+      "d1": 0.41,
+      "d5": -4.57,
+      "rvol": 0.57
+    },
+    {
+      "t": "KRE",
+      "d1": -1.04,
+      "d5": 1.03,
+      "rvol": 0.98
+    },
+    {
+      "t": "IBB",
+      "d1": -1.7,
+      "d5": -1.59,
+      "rvol": 0.82
+    },
+    {
+      "t": "ARKK",
+      "d1": -0.33,
+      "d5": -4.21,
+      "rvol": 0.54
+    },
+    {
+      "t": "TAN",
+      "d1": -2.24,
+      "d5": -0.81,
+      "rvol": 0.51
+    }
+  ],
+  "momentum": [
+    {
+      "t": "MPC",
+      "d1": 0.87,
+      "d20": 29.81,
+      "rvol": 0.72
+    },
+    {
+      "t": "S",
+      "d1": -0.56,
+      "d20": 29.56,
+      "rvol": 0.48
+    },
+    {
+      "t": "OKTA",
+      "d1": -0.63,
+      "d20": 25.97,
+      "rvol": 0.69
+    },
+    {
+      "t": "NET",
+      "d1": -1.89,
+      "d20": 21.58,
+      "rvol": 0.9
+    },
+    {
+      "t": "PANW",
+      "d1": -2.79,
+      "d20": 21.16,
+      "rvol": 0.73
+    },
+    {
+      "t": "ZS",
+      "d1": -0.08,
+      "d20": 20.0,
+      "rvol": 0.58
+    },
+    {
+      "t": "SNOW",
+      "d1": 2.02,
+      "d20": 18.1,
+      "rvol": 0.63
+    },
+    {
+      "t": "DDOG",
+      "d1": 1.74,
+      "d20": 18.03,
+      "rvol": 0.71
+    },
+    {
+      "t": "CRWD",
+      "d1": -2.26,
+      "d20": 15.93,
+      "rvol": 0.66
+    },
+    {
+      "t": "CRM",
+      "d1": 1.77,
+      "d20": 14.5,
+      "rvol": 0.71
+    },
+    {
+      "t": "SHOP",
+      "d1": 0.74,
+      "d20": 14.36,
+      "rvol": 0.88
+    },
+    {
+      "t": "MATX",
+      "d1": -1.7,
+      "d20": 14.21,
+      "rvol": 0.65
+    },
+    {
+      "t": "ADM",
+      "d1": -0.27,
+      "d20": 14.07,
+      "rvol": 0.74
+    },
+    {
+      "t": "BABA",
+      "d1": 4.67,
+      "d20": 12.36,
+      "rvol": 0.99
+    },
+    {
+      "t": "ZBRA",
+      "d1": -1.01,
+      "d20": 12.17,
+      "rvol": 0.71
+    }
+  ],
+  "rvolTbl": [
+    {
+      "t": "WBD",
+      "rvol": 2.01,
+      "d1": -3.76
+    },
+    {
+      "t": "ISRG",
+      "rvol": 1.62,
+      "d1": 2.24
+    },
+    {
+      "t": "DHI",
+      "rvol": 1.57,
+      "d1": -3.08
+    },
+    {
+      "t": "ZION",
+      "rvol": 1.55,
+      "d1": -0.53
+    },
+    {
+      "t": "SCHW",
+      "rvol": 1.36,
+      "d1": 0.96
+    },
+    {
+      "t": "RF",
+      "rvol": 1.34,
+      "d1": -1.71
+    },
+    {
+      "t": "NFLX",
+      "rvol": 1.12,
+      "d1": -1.96
+    },
+    {
+      "t": "WFC",
+      "rvol": 1.05,
+      "d1": -1.35
+    },
+    {
+      "t": "CMG",
+      "rvol": 1.01,
+      "d1": -3.8
+    },
+    {
+      "t": "LI",
+      "rvol": 1.01,
+      "d1": -0.16
+    },
+    {
+      "t": "NOW",
+      "rvol": 1.01,
+      "d1": 1.41
+    },
+    {
+      "t": "BABA",
+      "rvol": 0.99,
+      "d1": 4.67
+    },
+    {
+      "t": "GOLD",
+      "rvol": 0.98,
+      "d1": -1.93
+    },
+    {
+      "t": "KRE",
+      "rvol": 0.98,
+      "d1": -1.04
+    },
+    {
+      "t": "COP",
+      "rvol": 0.96,
+      "d1": 0.85
+    }
+  ],
+  "ext": [
+    {
+      "t": "SNOW",
+      "extAtr": 12.6,
+      "pctFrom50": 21.5
+    },
+    {
+      "t": "SLB",
+      "extAtr": -12.1,
+      "pctFrom50": -10.5
+    },
+    {
+      "t": "LI",
+      "extAtr": -10.8,
+      "pctFrom50": -13.9
+    },
+    {
+      "t": "ROKU",
+      "extAtr": 10.3,
+      "pctFrom50": 8.7
+    },
+    {
+      "t": "MPC",
+      "extAtr": 9.5,
+      "pctFrom50": 19.9
+    },
+    {
+      "t": "QCOM",
+      "extAtr": -8.8,
+      "pctFrom50": -17.5
+    },
+    {
+      "t": "NFLX",
+      "extAtr": -8.1,
+      "pctFrom50": -15.7
+    },
+    {
+      "t": "GDX",
+      "extAtr": -7.9,
+      "pctFrom50": -13.6
+    },
+    {
+      "t": "NEM",
+      "extAtr": -7.9,
+      "pctFrom50": -13.0
+    },
+    {
+      "t": "OKTA",
+      "extAtr": 7.6,
+      "pctFrom50": 26.4
+    },
+    {
+      "t": "BAC",
+      "extAtr": 7.2,
+      "pctFrom50": 9.6
+    },
+    {
+      "t": "SCHW",
+      "extAtr": 7.2,
+      "pctFrom50": 10.5
+    },
+    {
+      "t": "ADM",
+      "extAtr": 6.8,
+      "pctFrom50": 7.8
+    },
+    {
+      "t": "COHR",
+      "extAtr": -6.6,
+      "pctFrom50": -21.6
+    },
+    {
+      "t": "MELI",
+      "extAtr": 6.6,
+      "pctFrom50": 8.6
+    }
+  ]
+}
