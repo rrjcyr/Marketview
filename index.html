@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stable Market Board</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#0a0e17;
+    --panel:#0f1524;
+    --panel-head:#141b2e;
+    --border:#1e2740;
+    --text:#e8ecf5;
+    --sub:#7d8aa8;
+    --sub2:#54617e;
+    --green:#3ecf8e;
+    --red:#e5566d;
+    --blue:#4f8ef7;
+    --amber:#e5a13c;
+    --mono: "SF Mono","IBM Plex Mono",Menlo,Consolas,monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; min-height:100vh; padding-bottom:40px;
+  }
+  a{color:inherit; text-decoration:none;}
+
+  /* header */
+  header{
+    display:flex; align-items:center; gap:14px;
+    background:#0c1220; border-bottom:1px solid var(--border);
+    padding:10px 18px; position:sticky; top:0; z-index:50;
+    overflow-x:auto;
+  }
+  .logo{
+    width:34px; height:34px; border-radius:7px;
+    background:linear-gradient(135deg,var(--blue),#2a5fd6);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:12px; letter-spacing:.5px; flex:none;
+  }
+  .brand{display:flex; flex-direction:column; line-height:1.2; flex:none; margin-right:8px;}
+  .brand .name{font-size:13px; font-weight:700; letter-spacing:.6px;}
+  .brand .meta{font-size:10.5px; color:var(--sub); letter-spacing:.3px;}
+  nav{display:flex; gap:4px; flex:1; overflow-x:auto;}
+  nav button{
+    background:transparent; border:1px solid transparent; color:var(--sub);
+    font-family:var(--sans); font-size:11.5px; font-weight:700; letter-spacing:.4px;
+    padding:8px 12px; border-radius:6px; cursor:pointer; white-space:nowrap;
+  }
+  nav button:hover{color:var(--text);}
+  nav button.active{background:#111a2e; border-color:var(--blue); color:var(--text);}
+  .hdr-right{display:flex; align-items:center; gap:8px; flex:none;}
+  .pill{
+    font-size:10.5px; font-weight:700; letter-spacing:.4px; color:var(--sub);
+    border:1px solid var(--border); padding:7px 10px; border-radius:6px; cursor:pointer;
+    background:#0f1524;
+  }
+  .pill.live-off{color:var(--red);}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; margin-right:5px;}
+  .date{font-size:11px; color:var(--sub); white-space:nowrap;}
+
+  main{max-width:1500px; margin:0 auto; padding:18px;}
+  .grid{display:grid; gap:16px;}
+  .grid-2{grid-template-columns:1fr 1fr;}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:16px;}
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel-head); padding:9px 16px; border-bottom:1px solid var(--border);
+  }
+  .panel-head h2{font-size:11.5px; letter-spacing:.8px; font-weight:800; color:#c4cbdc;}
+  .panel-head .tag{font-size:10px; color:var(--sub2); letter-spacing:.3px;}
+  .panel-body{padding:16px;}
+
+  /* regime read */
+  .regime-cols{display:grid; grid-template-columns:repeat(5,1fr); gap:0;}
+  @media(max-width:1100px){.regime-cols{grid-template-columns:repeat(2,1fr);}}
+  .rcol{padding:14px 18px; border-right:1px solid var(--border);}
+  .rcol:last-child{border-right:none;}
+  .rcol .lbl{font-size:10px; letter-spacing:.6px; color:var(--sub2); font-weight:700; margin-bottom:6px;}
+  .rcol .big{font-size:20px; font-weight:800;}
+  .rcol .sub{font-size:11px; color:var(--sub); margin-top:4px;}
+  .risk-off{color:var(--red);}
+  .risk-on{color:var(--green);}
+
+  /* index cards */
+  .idx-cols{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+  @media(max-width:1100px){.idx-cols{grid-template-columns:repeat(2,1fr);}}
+  .idx-card{background:#0c1220; border:1px solid var(--border); border-radius:7px; padding:12px 14px;}
+  .idx-card .t1{font-size:13px; font-weight:800;}
+  .idx-card .t2{font-size:10px; color:var(--sub2); margin-bottom:8px;}
+  .idx-row{display:flex; justify-content:space-between; font-size:11.5px; padding:2px 0; font-family:var(--mono);}
+  .idx-row .k{color:var(--sub);}
+
+  .up{color:var(--green);}
+  .down{color:var(--red);}
+
+  .breadth-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;}
+  .breadth-row{display:flex; justify-content:space-between; font-size:12.5px; padding:6px 0; border-bottom:1px dashed var(--border);}
+  .breadth-row .v{font-family:var(--mono); font-weight:700;}
+
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th{
+    text-align:left; font-size:10px; letter-spacing:.4px; color:var(--sub2);
+    padding:6px 8px; border-bottom:1px solid var(--border); font-weight:700;
+  }
+  th.num, td.num{text-align:right;}
+  td{padding:8px; border-bottom:1px solid #131b2e; font-family:var(--mono);}
+  tr:last-child td{border-bottom:none;}
+  .rank{color:var(--sub2); width:22px;}
+  .theme-name{font-family:var(--sans); font-weight:700; color:var(--text);}
+  .theme-name .cnt{color:var(--sub2); font-weight:500; font-family:var(--mono); font-size:11px;}
+  .badge{
+    font-size:9.5px; font-weight:800; letter-spacing:.4px; padding:3px 7px; border-radius:4px;
+    display:inline-block;
+  }
+  .b-dominant{background:rgba(62,207,142,.15); color:var(--green);}
+  .b-strong{background:rgba(79,142,247,.15); color:var(--blue);}
+  .b-weak{background:rgba(229,86,109,.12); color:#f2a0ac;}
+  .b-deteriorating{background:rgba(229,86,109,.18); color:var(--red);}
+  .b-fading{background:rgba(229,161,60,.15); color:var(--amber);}
+
+  .footer-note{
+    max-width:1500px; margin:0 auto; padding:0 18px; font-size:10.5px; color:var(--sub2);
+  }
+  .demo-flag{
+    display:inline-block; background:rgba(229,161,60,.12); color:var(--amber);
+    border:1px solid rgba(229,161,60,.35); padding:6px 10px; border-radius:6px;
+    font-size:11px; font-weight:700; margin-bottom:14px;
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .placeholder{padding:40px 20px; text-align:center; color:var(--sub); font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SMB</div>
+  <div class="brand">
+    <div class="name">STABLE MARKET BOARD</div>
+    <div class="meta" id="hdrMeta">— · — TICKERS · UNIVERSE V1</div>
+  </div>
+  <nav id="tabNav"></nav>
+  <div class="hdr-right">
+    <div class="pill" id="refreshBtn">⟳ REFRESH</div>
+    <div class="pill live-off" id="liveBtn">● LIVE OFF</div>
+    <div class="date" id="hdrDate"></div>
+  </div>
+</header>
+
+<main>
+  <div class="demo-flag" id="demoFlag">⚠ DEMO DATA — this board is running on generated sample data, not a live feed. See note at bottom for how to connect a real one.</div>
+  <div id="tabContent"></div>
+</main>
+
+<div class="footer-note">
+  Demo build · data regenerates each refresh, it is not real market data · to go live, wire the <code>fetchUniverse()</code> function to a market data API (e.g. Polygon.io, Twelve Data, Alpaca) on your own backend, since browser pages can't safely hold API keys.
+</div>
+
+<script>
+/* ---------- mock universe ---------- */
+const THEME_NAMES = ["Robotics","Software Infrastructure","Defensives","Energy","Biotech","Financials","EV/Autonomy","China Tech","Consumer Momentum","Datacenter REITs","Semiconductors","Optics","Industrials","Media & Streaming","Housing","Regional Banks","Cybersecurity","Gold Miners","Shipping","Agriculture"];
+const SECTOR_ETFS = ["XLK","XLF","XLE","XLV","XLI","XLY","XLP","XLU","XLB","XLRE","XLC","SMH","KRE","IBB","ARKK","TAN"];
+const IDX = [
+  {t:"SPY", s:"SPX"}, {t:"QQQ", s:"NDX"}, {t:"IWM", s:"R2K"}, {t:"RSP", s:"EQUAL WEIGHT SPX"}, {t:"DIA", s:"DJIA"}
+];
+
+function rand(min,max){return Math.random()*(max-min)+min;}
+function pick(arr,n){const c=[...arr]; const out=[]; while(out.length<n && c.length){out.push(c.splice(Math.floor(Math.random()*c.length),1)[0]);} return out;}
+function fmtPct(v,dec=2){const s=v>=0?"+":""; return s+v.toFixed(dec)+"%";}
+function cls(v){return v>=0?"up":"down";}
+
+let DATA = {};
+
+function genData(){
+  const tickers = 257;
+  const regimeOptions = [
+    {label:"RISK-OFF", cls:"risk-off"},
+    {label:"NEUTRAL", cls:""},
+    {label:"RISK-ON", cls:"risk-on"}
+  ];
+  const regime = Math.random()<0.4 ? regimeOptions[0] : (Math.random()<0.5?regimeOptions[1]:regimeOptions[2]);
+
+  const themes = THEME_NAMES.map(name=>{
+    const score = Math.floor(rand(20,100));
+    const delta = rand(-14,14);
+    let status = "STRONG";
+    if(score>85) status="DOMINANT";
+    else if(score<45) status = delta<0 ? "DETERIORATING" : "WEAK";
+    else if(delta<-6) status="FADING";
+    return {name, count: Math.floor(rand(2,30)), score, delta, status};
+  }).sort((a,b)=>b.score-a.score);
+
+  const idx = IDX.map(i=>({
+    ...i,
+    d1: rand(-2.2,1.5),
+    d5: rand(-5,4),
+    dist50: rand(-4,3),
+    atrExt: rand(-2.2,2.2)
+  }));
+
+  const etfs = SECTOR_ETFS.map(t=>({t, d1: rand(-2.5,2.5), d5: rand(-6,6), rvol: rand(0.4,2.8)}));
+
+  const momentum = pick(["NVDA","AVGO","PLTR","SMCI","CRWD","ANET","VRT","ISRG","LLY","TSM","MELI","SHOP","NOW","UBER","DDOG"],10)
+    .map(t=>({t, d1: rand(-1,4), d20: rand(2,30), rvol: rand(0.8,3.2)}));
+
+  const rvolTbl = pick(["TSLA","AAPL","MSFT","AMZN","META","GOOGL","NFLX","AMD","INTC","XOM","JPM","BA","DIS","V","MA"],12)
+    .map(t=>({t, rvol: rand(0.5,4.5), d1: rand(-3,3)}));
+
+  const ext = pick(["COIN","MSTR","ARM","SNOW","ROKU","RIVN","SOFI","PLUG","AFRM","U","RBLX","DKNG"],10)
+    .map(t=>({t, extAtr: rand(-3,3.5), pctFrom50: rand(-25,25)}));
+
+  return {
+    regime,
+    dominant: themes[0],
+    emerging: null,
+    fading: themes.find(t=>t.status==="DETERIORATING"||t.status==="FADING") || themes[themes.length-1],
+    newHighs: Math.floor(rand(5,40)), newLows: Math.floor(rand(30,220)),
+    up3: Math.floor(rand(5,40)), down3: Math.floor(rand(10,50)),
+    pct20: rand(15,55), pct50: rand(15,55), pct200: rand(20,65),
+    newHi20: Math.floor(rand(5,45)), newHi52: Math.floor(rand(0,15)),
+    totalNames: tickers,
+    themes, idx, etfs, momentum, rvolTbl, ext,
+    asOf: new Date()
+  };
+}
+
+function normalizeRealData(d){
+  d.dominant = d.themes[0];
+  d.fading = d.themes.find(t=>t.status==="DETERIORATING"||t.status==="FADING") || d.themes[d.themes.length-1];
+  return d;
+}
+
+async function refreshData(){
+  try{
+    const res = await fetch("data.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("no data.json");
+    const real = await res.json();
+    DATA = normalizeRealData(real);
+    DATA.asOf = new Date(real.asOf);
+    setLiveFlag(true);
+  }catch(e){
+    DATA = genData();
+    setLiveFlag(false);
+  }
+  document.getElementById("hdrMeta").textContent = DATA.asOf.toISOString().slice(0,10) + " · " + DATA.totalNames + " TICKERS · UNIVERSE V1";
+  document.getElementById("hdrDate").textContent = DATA.asOf.toISOString().slice(0,10);
+  renderActiveTab();
+}
+
+function setLiveFlag(isReal){
+  const flag = document.getElementById("demoFlag");
+  if(!flag) return;
+  flag.style.display = isReal ? "none" : "";
+}
+
+/* ---------- tabs ---------- */
+const TABS = ["DAILY BOARD","THEMES","BREADTH","ETF GRID","RVOL","OPTIONS","MOMENTUM","EXTENSION","CLEAN MOMENTUM"];
+let activeTab = TABS[0];
+
+function buildNav(){
+  const nav = document.getElementById("tabNav");
+  nav.innerHTML = "";
+  TABS.forEach(t=>{
+    const b = document.createElement("button");
+    b.textContent = t;
+    if(t===activeTab) b.classList.add("active");
+    b.onclick = ()=>{ activeTab=t; buildNav(); renderActiveTab(); };
+    nav.appendChild(b);
+  });
+}
+
+function badgeClass(status){
+  return {
+    "DOMINANT":"b-dominant","STRONG":"b-strong","WEAK":"b-weak",
+    "DETERIORATING":"b-deteriorating","FADING":"b-fading"
+  }[status] || "b-strong";
+}
+
+function themeRows(list){
+  return list.map((th,i)=>`
+    <tr>
+      <td class="rank">${i+1}</td>
+      <td class="theme-name">${th.name} <span class="cnt">${th.count}</span></td>
+      <td class="num" style="color:var(--green); font-weight:700;">${th.score}</td>
+      <td class="num ${cls(th.delta)}">${fmtPct(th.delta,1)}</td>
+      <td><span class="badge ${badgeClass(th.status)}">${th.status}</span></td>
+    </tr>`).join("");
+}
+
+function renderDailyBoard(){
+  const d = DATA;
+  const sortedByMove = [...d.themes].sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+  return `
+  <div class="panel">
+    <div class="panel-head"><h2>REGIME READ</h2><span class="tag">AS OF ${d.asOf.toISOString().slice(0,10)}</span></div>
+    <div class="regime-cols">
+      <div class="rcol">
+        <div class="lbl">REGIME</div>
+        <div class="big ${d.regime.cls}">${d.regime.label}</div>
+        <div class="sub">${d.pct50.toFixed(0)}% &gt; 50DMA · ${d.pct200.toFixed(0)}% &gt; 200DMA</div>
+      </div>
+      <div class="rcol">
+        <div class="lbl">DOMINANT</div>
+        <div class="big">${d.dominant.name}</div>
+        <div class="sub">${d.themes[1].name} · ${d.themes[2].name}</div>
+      </div>
+      <div class="rcol">
+        <div class="lbl">EMERGING</div>
+        <div class="big">—</div>
+        <div class="sub">no themes improving</div>
+      </div>
+      <div class="rcol">
+        <div class="lbl">FADING</div>
+        <div class="big" style="color:var(--red);">${d.fading.name}</div>
+        <div class="sub">${d.themes[d.themes.length-2].name} · ${d.themes[d.themes.length-3].name}</div>
+      </div>
+      <div class="rcol">
+        <div class="lbl">NEW HIGHS / LOWS</div>
+        <div class="big"><span class="up">${d.newHighs}</span> / <span class="down">${d.newLows}</span></div>
+        <div class="sub">52w highs: ${d.newHi52}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-head"><h2>INDEX &amp; BENCHMARK</h2><span class="tag">RET / DIST 50DMA / ATR EXT</span></div>
+      <div class="panel-body">
+        <div class="idx-cols">
+          ${d.idx.map(i=>`
+            <div class="idx-card">
+              <div class="t1">${i.t}</div>
+              <div class="t2">${i.s}</div>
+              <div class="idx-row"><span class="k">1D</span><span class="${cls(i.d1)}">${fmtPct(i.d1)}</span></div>
+              <div class="idx-row"><span class="k">5D</span><span class="${cls(i.d5)}">${fmtPct(i.d5)}</span></div>
+              <div class="idx-row"><span class="k">&gt;50DMA</span><span class="${cls(i.dist50)}">${fmtPct(i.dist50,1)}</span></div>
+              <div class="idx-row"><span class="k">ATR EXT</span><span class="${cls(i.atrExt)}">${i.atrExt>=0?"+":""}${i.atrExt.toFixed(1)}</span></div>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>UNIVERSE BREADTH</h2><span class="tag">EX-BENCHMARK</span></div>
+      <div class="panel-body">
+        <div class="breadth-grid">
+          <div class="breadth-row"><span>% &gt; 20DMA</span><span class="v">${d.pct20.toFixed(1)}%</span></div>
+          <div class="breadth-row"><span>% &gt; 50DMA</span><span class="v">${d.pct50.toFixed(1)}%</span></div>
+          <div class="breadth-row"><span>% &gt; 200DMA</span><span class="v">${d.pct200.toFixed(1)}%</span></div>
+          <div class="breadth-row"><span>Total names</span><span class="v">${d.totalNames}</span></div>
+          <div class="breadth-row"><span>New 20D highs</span><span class="v">${d.newHi20}</span></div>
+          <div class="breadth-row"><span>New 52W highs</span><span class="v">${d.newHi52}</span></div>
+          <div class="breadth-row"><span>Up 3%+</span><span class="v up">${d.up3}</span></div>
+          <div class="breadth-row"><span>Down 3%+</span><span class="v down">${d.down3}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-head"><h2>DOMINANT THEMES</h2><span class="tag">SCORE / 1D Δ / STATUS</span></div>
+      <div class="panel-body" style="padding:6px 10px;">
+        <table><tbody>${themeRows(d.themes.slice(0,8))}</tbody></table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>EMERGING &amp; FADING</h2><span class="tag">BIGGEST 1D Δ MOVES</span></div>
+      <div class="panel-body" style="padding:6px 10px;">
+        <table><tbody>${themeRows(sortedByMove.slice(0,8))}</tbody></table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderThemes(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>ALL THEMES</h2><span class="tag">${DATA.themes.length} TRACKED</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th></th><th>THEME</th><th class="num">SCORE</th><th class="num">1D Δ</th><th>STATUS</th></tr></thead>
+      <tbody>${themeRows(DATA.themes)}</tbody></table>
+    </div></div>`;
+}
+
+function renderBreadth(){
+  const d = DATA;
+  return `<div class="panel">
+    <div class="panel-head"><h2>BREADTH DETAIL</h2><span class="tag">EX-BENCHMARK</span></div>
+    <div class="panel-body">
+      <div class="breadth-grid">
+        <div class="breadth-row"><span>% &gt; 20DMA</span><span class="v">${d.pct20.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>% &gt; 50DMA</span><span class="v">${d.pct50.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>% &gt; 200DMA</span><span class="v">${d.pct200.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>Total names</span><span class="v">${d.totalNames}</span></div>
+        <div class="breadth-row"><span>New 20D highs</span><span class="v">${d.newHi20}</span></div>
+        <div class="breadth-row"><span>New 52W highs</span><span class="v">${d.newHi52}</span></div>
+        <div class="breadth-row"><span>New lows</span><span class="v down">${d.newLows}</span></div>
+        <div class="breadth-row"><span>Up 3%+ / Down 3%+</span><span class="v"><span class="up">${d.up3}</span> / <span class="down">${d.down3}</span></span></div>
+      </div>
+    </div></div>`;
+}
+
+function renderETFGrid(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>ETF GRID</h2><span class="tag">SECTOR SPDRS + FOCUS</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">5D</th><th class="num">RVOL</th></tr></thead>
+      <tbody>${DATA.etfs.map(e=>`<tr><td class="theme-name">${e.t}</td><td class="num ${cls(e.d1)}">${fmtPct(e.d1)}</td><td class="num ${cls(e.d5)}">${fmtPct(e.d5)}</td><td class="num">${e.rvol.toFixed(2)}x</td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function renderRVOL(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>RELATIVE VOLUME</h2><span class="tag">TOP MOVERS BY RVOL</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">RVOL</th><th class="num">1D</th></tr></thead>
+      <tbody>${DATA.rvolTbl.sort((a,b)=>b.rvol-a.rvol).map(r=>`<tr><td class="theme-name">${r.t}</td><td class="num" style="color:var(--amber); font-weight:700;">${r.rvol.toFixed(2)}x</td><td class="num ${cls(r.d1)}">${fmtPct(r.d1)}</td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function renderOptions(){
+  return `<div class="panel"><div class="panel-head"><h2>OPTIONS FLOW</h2><span class="tag">NOT WIRED</span></div>
+  <div class="placeholder">Options flow needs a dedicated feed (e.g. CBOE, ORATS, an options flow API).<br>Not included in this demo — structure it as a table of ticker / call-put ratio / unusual OI once you pick a source.</div></div>`;
+}
+
+function renderMomentum(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>MOMENTUM LEADERS</h2><span class="tag">20D CHANGE</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">20D</th><th class="num">RVOL</th></tr></thead>
+      <tbody>${DATA.momentum.sort((a,b)=>b.d20-a.d20).map(m=>`<tr><td class="theme-name">${m.t}</td><td class="num ${cls(m.d1)}">${fmtPct(m.d1)}</td><td class="num up">${fmtPct(m.d20,1)}</td><td class="num">${m.rvol.toFixed(2)}x</td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function renderExtension(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>EXTENSION</h2><span class="tag">ATR EXT / % FROM 50DMA</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">ATR EXT</th><th class="num">% FROM 50DMA</th></tr></thead>
+      <tbody>${DATA.ext.sort((a,b)=>Math.abs(b.extAtr)-Math.abs(a.extAtr)).map(e=>`<tr><td class="theme-name">${e.t}</td><td class="num ${cls(e.extAtr)}">${e.extAtr>=0?"+":""}${e.extAtr.toFixed(1)}</td><td class="num ${cls(e.pctFrom50)}">${fmtPct(e.pctFrom50,1)}</td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function renderCleanMomentum(){
+  const clean = DATA.momentum.filter(m=>m.d20>10).sort((a,b)=>b.d20-a.d20);
+  return `<div class="panel">
+    <div class="panel-head"><h2>CLEAN MOMENTUM</h2><span class="tag">20D &gt; +10%, LOW CHOP</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">20D</th></tr></thead>
+      <tbody>${clean.map(m=>`<tr><td class="theme-name">${m.t}</td><td class="num ${cls(m.d1)}">${fmtPct(m.d1)}</td><td class="num up">${fmtPct(m.d20,1)}</td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function renderActiveTab(){
+  const map = {
+    "DAILY BOARD": renderDailyBoard,
+    "THEMES": renderThemes,
+    "BREADTH": renderBreadth,
+    "ETF GRID": renderETFGrid,
+    "RVOL": renderRVOL,
+    "OPTIONS": renderOptions,
+    "MOMENTUM": renderMomentum,
+    "EXTENSION": renderExtension,
+    "CLEAN MOMENTUM": renderCleanMomentum
+  };
+  document.getElementById("tabContent").innerHTML = map[activeTab]();
+}
+
+document.getElementById("refreshBtn").onclick = refreshData;
+let liveOn = false;
+let liveTimer = null;
+document.getElementById("liveBtn").onclick = ()=>{
+  liveOn = !liveOn;
+  const btn = document.getElementById("liveBtn");
+  if(liveOn){
+    btn.textContent = "● LIVE ON";
+    btn.classList.remove("live-off");
+    btn.style.color = "var(--green)";
+    liveTimer = setInterval(refreshData, 8000);
+  } else {
+    btn.textContent = "● LIVE OFF";
+    btn.classList.add("live-off");
+    btn.style.color = "";
+    clearInterval(liveTimer);
+  }
+};
+
+buildNav();
+refreshData();
+</script>
+</body>
+</html>
