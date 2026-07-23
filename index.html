@@ -134,6 +134,21 @@
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
   .placeholder{padding:40px 20px; text-align:center; color:var(--sub); font-size:13px;}
+  .theme-link{color:inherit; border-bottom:1px dotted var(--sub2); cursor:pointer;}
+  .theme-link:hover{color:var(--blue); border-bottom-color:var(--blue);}
+  .back-link{color:var(--blue); font-size:11.5px; font-weight:700; cursor:pointer; display:inline-block; margin-bottom:10px;}
+  .back-link:hover{text-decoration:underline;}
+  .spark-cell{width:110px;}
+  .etf-link{color:inherit; cursor:pointer; border-bottom:1px dotted var(--sub2);}
+  .etf-link:hover{color:var(--blue); border-bottom-color:var(--blue);}
+  .sector-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px;}
+  .sector-card{
+    background:#0c1220; border:1px solid var(--border); border-radius:7px; padding:12px 14px;
+    cursor:pointer; transition:border-color .15s;
+  }
+  .sector-card:hover{border-color:var(--blue);}
+  .sector-card .nm{font-weight:700; font-size:12.5px; margin-bottom:4px;}
+  .sector-card .sc{font-family:var(--mono); font-size:11px; color:var(--sub);}
 </style>
 </head>
 <body>
@@ -175,6 +190,8 @@ function fmtPct(v,dec=2){const s=v>=0?"+":""; return s+v.toFixed(dec)+"%";}
 function cls(v){return v>=0?"up":"down";}
 
 let DATA = {};
+let selectedTheme = null;
+let selectedEtf = null;
 
 function genData(){
   const tickers = 257;
@@ -185,6 +202,7 @@ function genData(){
   ];
   const regime = Math.random()<0.4 ? regimeOptions[0] : (Math.random()<0.5?regimeOptions[1]:regimeOptions[2]);
 
+  const genericTickers = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","AVGO","JPM","XOM","LLY","V","UNH","HD","PG","MA","CVX","MRK","ABBV","PEP","COST","ADBE","CRM","NFLX","AMD","QCOM","TXN","INTC","IBM","GE"];
   const themes = THEME_NAMES.map(name=>{
     const score = Math.floor(rand(20,100));
     const delta = rand(-14,14);
@@ -192,7 +210,9 @@ function genData(){
     if(score>85) status="DOMINANT";
     else if(score<45) status = delta<0 ? "DETERIORATING" : "WEAK";
     else if(delta<-6) status="FADING";
-    return {name, count: Math.floor(rand(2,30)), score, delta, status};
+    const count = Math.floor(rand(4,14));
+    const constituents = pick(genericTickers, count).map(t=>({t, ret1: rand(-3,3), ret5: rand(-6,6), dist50: rand(-8,8)}));
+    return {name, count, score, delta, status, constituents};
   }).sort((a,b)=>b.score-a.score);
 
   const idx = IDX.map(i=>({
@@ -203,7 +223,11 @@ function genData(){
     atrExt: rand(-2.2,2.2)
   }));
 
-  const etfs = SECTOR_ETFS.map(t=>({t, d1: rand(-2.5,2.5), d5: rand(-6,6), rvol: rand(0.4,2.8)}));
+  const etfs = SECTOR_ETFS.map(t=>{
+    let base = 100, hist=[];
+    for(let i=0;i<15;i++){ base *= (1+rand(-1.5,1.5)/100); hist.push(Number(base.toFixed(2))); }
+    return {t, d1: rand(-2.5,2.5), d5: rand(-6,6), rvol: rand(0.4,2.8), hist};
+  });
 
   const momentum = pick(["NVDA","AVGO","PLTR","SMCI","CRWD","ANET","VRT","ISRG","LLY","TSM","MELI","SHOP","NOW","UBER","DDOG"],10)
     .map(t=>({t, d1: rand(-1,4), d20: rand(2,30), rvol: rand(0.8,3.2)}));
@@ -244,6 +268,7 @@ async function refreshData(){
     DATA.asOf = new Date(real.asOf);
     setLiveFlag(true);
   }catch(e){
+    console.error("Stable Market Board: falling back to demo data —", e.message);
     DATA = genData();
     setLiveFlag(false);
   }
@@ -274,6 +299,19 @@ function buildNav(){
   });
 }
 
+function sparkline(values, w=100, h=28){
+  if(!values || values.length<2) return "";
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max-min) || 1;
+  const step = w/(values.length-1);
+  const pts = values.map((v,i)=> `${(i*step).toFixed(1)},${(h-((v-min)/range)*h).toFixed(1)}`).join(" ");
+  const up = values[values.length-1] >= values[0];
+  const color = up ? "var(--green)" : "var(--red)";
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
 function badgeClass(status){
   return {
     "DOMINANT":"b-dominant","STRONG":"b-strong","WEAK":"b-weak",
@@ -281,15 +319,27 @@ function badgeClass(status){
   }[status] || "b-strong";
 }
 
+function themeLink(name){
+  return `<a href="#" class="theme-link" onclick="showThemeDetail('${name.replace(/'/g,"\\'")}'); return false;">${name}</a>`;
+}
+
 function themeRows(list){
   return list.map((th,i)=>`
     <tr>
       <td class="rank">${i+1}</td>
-      <td class="theme-name">${th.name} <span class="cnt">${th.count}</span></td>
+      <td class="theme-name">${themeLink(th.name)} <span class="cnt">${th.count}</span></td>
       <td class="num" style="color:var(--green); font-weight:700;">${th.score}</td>
       <td class="num ${cls(th.delta)}">${fmtPct(th.delta,1)}</td>
       <td><span class="badge ${badgeClass(th.status)}">${th.status}</span></td>
     </tr>`).join("");
+}
+
+function showThemeDetail(name){
+  selectedTheme = name;
+  activeTab = "THEME_DETAIL";
+  buildNav();
+  renderActiveTab();
+  window.scrollTo(0,0);
 }
 
 function renderDailyBoard(){
@@ -306,8 +356,8 @@ function renderDailyBoard(){
       </div>
       <div class="rcol">
         <div class="lbl">DOMINANT</div>
-        <div class="big">${d.dominant.name}</div>
-        <div class="sub">${d.themes[1].name} · ${d.themes[2].name}</div>
+        <div class="big">${themeLink(d.dominant.name)}</div>
+        <div class="sub">${themeLink(d.themes[1].name)} · ${themeLink(d.themes[2].name)}</div>
       </div>
       <div class="rcol">
         <div class="lbl">EMERGING</div>
@@ -316,8 +366,8 @@ function renderDailyBoard(){
       </div>
       <div class="rcol">
         <div class="lbl">FADING</div>
-        <div class="big" style="color:var(--red);">${d.fading.name}</div>
-        <div class="sub">${d.themes[d.themes.length-2].name} · ${d.themes[d.themes.length-3].name}</div>
+        <div class="big" style="color:var(--red);">${themeLink(d.fading.name)}</div>
+        <div class="sub">${themeLink(d.themes[d.themes.length-2].name)} · ${themeLink(d.themes[d.themes.length-3].name)}</div>
       </div>
       <div class="rcol">
         <div class="lbl">NEW HIGHS / LOWS</div>
@@ -407,10 +457,16 @@ function renderBreadth(){
 
 function renderETFGrid(){
   return `<div class="panel">
-    <div class="panel-head"><h2>ETF GRID</h2><span class="tag">SECTOR SPDRS + FOCUS</span></div>
+    <div class="panel-head"><h2>ETF GRID</h2><span class="tag">SECTOR SPDRS + FOCUS · CLICK A TICKER FOR HOLDINGS</span></div>
     <div class="panel-body" style="padding:6px 10px;">
-      <table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">5D</th><th class="num">RVOL</th></tr></thead>
-      <tbody>${DATA.etfs.map(e=>`<tr><td class="theme-name">${e.t}</td><td class="num ${cls(e.d1)}">${fmtPct(e.d1)}</td><td class="num ${cls(e.d5)}">${fmtPct(e.d5)}</td><td class="num">${e.rvol.toFixed(2)}x</td></tr>`).join("")}</tbody></table>
+      <table><thead><tr><th>TICKER</th><th class="num">15D TREND</th><th class="num">1D</th><th class="num">5D</th><th class="num">RVOL</th></tr></thead>
+      <tbody>${DATA.etfs.map(e=>`<tr>
+        <td class="theme-name"><a href="#" class="etf-link" onclick="showEtfDetail('${e.t}'); return false;">${e.t}</a></td>
+        <td class="num spark-cell">${sparkline(e.hist || [e.d5,e.d1])}</td>
+        <td class="num ${cls(e.d1)}">${fmtPct(e.d1)}</td>
+        <td class="num ${cls(e.d5)}">${fmtPct(e.d5)}</td>
+        <td class="num">${e.rvol.toFixed(2)}x</td>
+      </tr>`).join("")}</tbody></table>
     </div></div>`;
 }
 
@@ -456,6 +512,69 @@ function renderCleanMomentum(){
     </div></div>`;
 }
 
+// Approximate, illustrative top holdings for common sector/theme ETFs.
+// Not a live holdings feed -- real weightings drift over time and this
+// is meant as a rough "what's in this thing" reference, not a source of truth.
+const ETF_HOLDINGS = {
+  XLK: ["AAPL","MSFT","NVDA","AVGO","CRM","ADBE","AMD","CSCO"],
+  XLF: ["BRK.B","JPM","V","MA","BAC","WFC","GS","SPGI"],
+  XLE: ["XOM","CVX","COP","EOG","SLB","MPC","PSX","WMB"],
+  XLV: ["LLY","UNH","JNJ","MRK","ABBV","TMO","ABT","ISRG"],
+  XLI: ["GE","CAT","RTX","UNP","HON","DE","BA","ADP"],
+  XLY: ["AMZN","TSLA","HD","MCD","NKE","LOW","SBUX","BKNG"],
+  XLP: ["PG","KO","PEP","COST","WMT","PM","MO","CL"],
+  XLU: ["NEE","SO","DUK","CEG","AEP","D","EXC","SRE"],
+  XLB: ["LIN","SHW","APD","ECL","FCX","NEM","DD","NUE"],
+  XLRE: ["PLD","AMT","EQIX","WELL","DLR","SPG","O","PSA"],
+  XLC: ["META","GOOGL","GOOG","NFLX","DIS","CMCSA","TMUS","EA"],
+  SMH: ["NVDA","TSM","AVGO","ASML","AMD","QCOM","TXN","MU"],
+  KRE: ["ZION","CFG","RF","FITB","MTB","HBAN","KEY","CMA"],
+  IBB: ["VRTX","REGN","GILD","AMGN","MRNA","BIIB","ILMN","SGEN"],
+  ARKK: ["TSLA","COIN","ROKU","RBLX","PATH","DKNG","U","TWLO"],
+  TAN: ["FSLR","ENPH","SEDG","RUN","NOVA","ARRY","SHLS","CSIQ"]
+};
+
+function showEtfDetail(ticker){
+  selectedEtf = ticker;
+  activeTab = "ETF_DETAIL";
+  buildNav();
+  renderActiveTab();
+  window.scrollTo(0,0);
+}
+
+function renderThemeDetail(){
+  const theme = DATA.themes.find(t=>t.name===selectedTheme);
+  const list = (theme && theme.constituents) || [];
+  return `<div class="panel">
+    <div class="panel-head"><h2>${selectedTheme ? selectedTheme.toUpperCase() : "THEME"}</h2>
+      <span class="tag">${theme ? theme.count + " NAMES · SCORE " + theme.score : ""}</span></div>
+    <div class="panel-body">
+      <a href="#" class="back-link" onclick="activeTab='THEMES'; buildNav(); renderActiveTab(); return false;">‹ All Themes</a>
+      ${list.length ? `<table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">5D</th><th class="num">% FROM 50DMA</th></tr></thead>
+        <tbody>${list.map(c=>`<tr><td class="theme-name">${c.t}</td><td class="num ${cls(c.ret1)}">${fmtPct(c.ret1)}</td><td class="num ${cls(c.ret5)}">${fmtPct(c.ret5)}</td><td class="num ${cls(c.dist50)}">${fmtPct(c.dist50,1)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="placeholder">No constituent list available for this theme in the current data.</div>`}
+    </div></div>`;
+}
+
+function renderEtfDetail(){
+  const t = selectedEtf;
+  const stats = DATA.etfs.find(e=>e.t===t);
+  const holdings = ETF_HOLDINGS[t] || [];
+  return `<div class="panel">
+    <div class="panel-head"><h2>${t}</h2><span class="tag">APPROX. TOP HOLDINGS</span></div>
+    <div class="panel-body">
+      <a href="#" class="back-link" onclick="activeTab='ETF GRID'; buildNav(); renderActiveTab(); return false;">‹ ETF Grid</a>
+      ${stats ? `<div class="idx-cols" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
+        <div class="idx-card"><div class="t2">1D</div><div class="t1 ${cls(stats.d1)}">${fmtPct(stats.d1)}</div></div>
+        <div class="idx-card"><div class="t2">5D</div><div class="t1 ${cls(stats.d5)}">${fmtPct(stats.d5)}</div></div>
+        <div class="idx-card"><div class="t2">RVOL</div><div class="t1">${stats.rvol.toFixed(2)}x</div></div>
+      </div>` : ""}
+      ${holdings.length ? `<div class="sector-cards">${holdings.map(h=>`<div class="sector-card"><div class="nm">${h}</div><div class="sc">holding</div></div>`).join("")}</div>
+      <div style="margin-top:12px; font-size:11px; color:var(--sub2);">Illustrative top holdings only — not a live holdings feed, actual weightings drift over time.</div>`
+      : `<div class="placeholder">No holdings reference on file for ${t}.</div>`}
+    </div></div>`;
+}
+
 function renderActiveTab(){
   const map = {
     "DAILY BOARD": renderDailyBoard,
@@ -466,12 +585,14 @@ function renderActiveTab(){
     "OPTIONS": renderOptions,
     "MOMENTUM": renderMomentum,
     "EXTENSION": renderExtension,
-    "CLEAN MOMENTUM": renderCleanMomentum
+    "CLEAN MOMENTUM": renderCleanMomentum,
+    "THEME_DETAIL": renderThemeDetail,
+    "ETF_DETAIL": renderEtfDetail
   };
   document.getElementById("tabContent").innerHTML = map[activeTab]();
 }
 
-document.getElementById("refreshBtn").onclick = refreshData;
+document.getElementById("refreshBtn").onclick = ()=>{ location.reload(); };
 let liveOn = false;
 let liveTimer = null;
 document.getElementById("liveBtn").onclick = ()=>{

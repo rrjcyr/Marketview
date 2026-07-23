@@ -125,8 +125,10 @@ def stats_for_ticker(hist):
         atr_ext = (last - sma50) / atr if atr else 0.0
         above20 = last > sma20
         above50 = last > sma50
+        hist15 = [round(float(x), 2) for x in c.tail(15).tolist()]
         return dict(last=last, ret1=ret1, ret5=ret5, ret20=ret20, rvol=rvol,
-                    dist50=dist50, atr_ext=atr_ext, above20=above20, above50=above50)
+                    dist50=dist50, atr_ext=atr_ext, above20=above20, above50=above50,
+                    hist15=hist15)
 
     today = snapshot(len(close))
     yesterday = snapshot(len(close) - 1)
@@ -191,6 +193,12 @@ def build():
             prev_score = score
         return round(score), round(score - prev_score, 1)
 
+    # keep ticker symbol alongside stats so we can build per-theme constituent lists
+    theme_members_with_ticker = {}
+    for t, theme in UNIVERSE.items():
+        if t in per_ticker:
+            theme_members_with_ticker.setdefault(theme, []).append((t, per_ticker[t]))
+
     themes = []
     for theme, members in theme_groups.items():
         score, delta = theme_score(members)
@@ -202,7 +210,13 @@ def build():
             status = "FADING"
         else:
             status = "STRONG"
-        themes.append(dict(name=theme, count=len(members), score=score, delta=delta, status=status))
+        constituents = [
+            dict(t=t, ret1=round(s["ret1"], 2), ret5=round(s["ret5"], 2), dist50=round(s["dist50"], 1))
+            for t, s in theme_members_with_ticker.get(theme, [])
+        ]
+        constituents.sort(key=lambda x: -x["ret1"])
+        themes.append(dict(name=theme, count=len(members), score=score, delta=delta, status=status,
+                            constituents=constituents))
     themes.sort(key=lambda x: -x["score"])
 
     idx_out = []
@@ -216,7 +230,8 @@ def build():
     for t in SECTOR_ETFS:
         s = per_ticker.get(t)
         if s:
-            etf_out.append(dict(t=t, d1=round(s["ret1"], 2), d5=round(s["ret5"], 2), rvol=round(s["rvol"], 2)))
+            etf_out.append(dict(t=t, d1=round(s["ret1"], 2), d5=round(s["ret5"], 2), rvol=round(s["rvol"], 2),
+                                 hist=s.get("hist15", [])))
 
     momentum = sorted(
         [dict(t=t, d1=round(s["ret1"], 2), d20=round(s["ret20"], 2), rvol=round(s["rvol"], 2))
@@ -244,8 +259,19 @@ def build():
         momentum=momentum, rvolTbl=rvol_tbl, ext=ext_tbl,
     )
 
+    def sanitize(obj):
+        if isinstance(obj, float):
+            return None if (np.isnan(obj) or np.isinf(obj)) else obj
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [sanitize(v) for v in obj]
+        return obj
+
+    data = sanitize(data)
+
     with open("data.json", "w") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, allow_nan=False)
     print(f"Wrote data.json -- {total} tickers, regime={regime_label}")
 
 
