@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Marketview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#0a0e17; --panel:#0f1524; --panel-head:#141b2e; --border:#1e2740;
+    --text:#e8ecf5; --sub:#7d8aa8; --sub2:#54617e;
+    --green:#3ecf8e; --red:#e5566d; --blue:#4f8ef7; --amber:#e5a13c;
+    --mono:"SF Mono","IBM Plex Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; min-height:100vh; padding-bottom:40px;}
+  a{color:inherit; text-decoration:none;}
+  header{display:flex; align-items:center; gap:14px; background:#0c1220; border-bottom:1px solid var(--border); padding:10px 18px; position:sticky; top:0; z-index:50; overflow-x:auto;}
+  .logo{width:34px; height:34px; border-radius:7px; background:linear-gradient(135deg,var(--blue),#2a5fd6); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; letter-spacing:.5px; flex:none;}
+  .brand{display:flex; flex-direction:column; line-height:1.2; flex:none; margin-right:8px;}
+  .brand .name{font-size:13px; font-weight:700; letter-spacing:.6px;}
+  .brand .meta{font-size:10.5px; color:var(--sub); letter-spacing:.3px;}
+  nav{display:flex; gap:4px; flex:1; overflow-x:auto;}
+  nav button{background:transparent; border:1px solid transparent; color:var(--sub); font-family:var(--sans); font-size:11.5px; font-weight:700; letter-spacing:.4px; padding:8px 12px; border-radius:6px; cursor:pointer; white-space:nowrap;}
+  nav button:hover{color:var(--text);}
+  nav button.active{background:#111a2e; border-color:var(--blue); color:var(--text);}
+  .hdr-right{display:flex; align-items:center; gap:8px; flex:none;}
+  .pill{font-size:10.5px; font-weight:700; letter-spacing:.4px; color:var(--sub); border:1px solid var(--border); padding:7px 10px; border-radius:6px; cursor:pointer; background:#0f1524;}
+  .date{font-size:11px; color:var(--sub); white-space:nowrap;}
+  main{max-width:1500px; margin:0 auto; padding:18px;}
+  .grid{display:grid; gap:16px;}
+  .grid-2{grid-template-columns:1fr 1fr;}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:16px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; background:var(--panel-head); padding:9px 16px; border-bottom:1px solid var(--border);}
+  .panel-head h2{font-size:11.5px; letter-spacing:.8px; font-weight:800; color:#c4cbdc;}
+  .panel-head .tag{font-size:10px; color:var(--sub2); letter-spacing:.3px;}
+  .panel-body{padding:16px;}
+  .regime-cols{display:grid; grid-template-columns:repeat(5,1fr);}
+  @media(max-width:1100px){.regime-cols{grid-template-columns:repeat(2,1fr);}}
+  .rcol{padding:14px 18px; border-right:1px solid var(--border);}
+  .rcol:last-child{border-right:none;}
+  .rcol .lbl{font-size:10px; letter-spacing:.6px; color:var(--sub2); font-weight:700; margin-bottom:6px;}
+  .rcol .big{font-size:20px; font-weight:800;}
+  .rcol .sub{font-size:11px; color:var(--sub); margin-top:4px;}
+  .risk-off{color:var(--red);}
+  .risk-on{color:var(--green);}
+  .idx-cols{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+  @media(max-width:1100px){.idx-cols{grid-template-columns:repeat(2,1fr);}}
+  .idx-card{background:#0c1220; border:1px solid var(--border); border-radius:7px; padding:12px 14px;}
+  .idx-card .t1{font-size:13px; font-weight:800;}
+  .idx-card .t2{font-size:10px; color:var(--sub2); margin-bottom:8px;}
+  .idx-row{display:flex; justify-content:space-between; font-size:11.5px; padding:2px 0; font-family:var(--mono);}
+  .idx-row .k{color:var(--sub);}
+  .up{color:var(--green);}
+  .down{color:var(--red);}
+  .breadth-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;}
+  .breadth-row{display:flex; justify-content:space-between; font-size:12.5px; padding:6px 0; border-bottom:1px dashed var(--border);}
+  .breadth-row .v{font-family:var(--mono); font-weight:700;}
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th{text-align:left; font-size:10px; letter-spacing:.4px; color:var(--sub2); padding:6px 8px; border-bottom:1px solid var(--border); font-weight:700;}
+  th.num, td.num{text-align:right;}
+  td{padding:8px; border-bottom:1px solid #131b2e; font-family:var(--mono);}
+  tr:last-child td{border-bottom:none;}
+  .rank{color:var(--sub2); width:22px;}
+  .theme-name{font-family:var(--sans); font-weight:700; color:var(--text);}
+  .theme-name .cnt{color:var(--sub2); font-weight:500; font-family:var(--mono); font-size:11px;}
+  .badge{font-size:9.5px; font-weight:800; letter-spacing:.4px; padding:3px 7px; border-radius:4px; display:inline-block;}
+  .b-dominant{background:rgba(62,207,142,.15); color:var(--green);}
+  .b-strong{background:rgba(79,142,247,.15); color:var(--blue);}
+  .b-weak{background:rgba(229,86,109,.12); color:#f2a0ac;}
+  .b-deteriorating{background:rgba(229,86,109,.18); color:var(--red);}
+  .b-fading{background:rgba(229,161,60,.15); color:var(--amber);}
+  .demo-flag{display:inline-block; background:rgba(229,161,60,.12); color:var(--amber); border:1px solid rgba(229,161,60,.35); padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; margin-bottom:14px;}
+  .placeholder{padding:40px 20px; text-align:center; color:var(--sub); font-size:13px;}
+  .theme-link{color:inherit; border-bottom:1px dotted var(--sub2); cursor:pointer;}
+  .theme-link:hover{color:var(--blue); border-bottom-color:var(--blue);}
+  .back-link{color:var(--blue); font-size:11.5px; font-weight:700; cursor:pointer; display:inline-block; margin-bottom:10px;}
+  .back-link:hover{text-decoration:underline;}
+  .spark-cell{width:110px;}
+  .etf-link{color:inherit; cursor:pointer; border-bottom:1px dotted var(--sub2);}
+  .etf-link:hover{color:var(--blue); border-bottom-color:var(--blue);}
+  .explainer{background:#0c1220; border:1px solid var(--border); border-radius:7px; padding:14px 16px; font-size:12.5px; line-height:1.65; color:var(--sub); margin-top:4px;}
+  .explainer b{color:var(--text);}
+  .bar-track{background:#131b2e; border-radius:3px; height:8px; width:120px; display:inline-block; vertical-align:middle; position:relative; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:3px; position:absolute; top:0;}
+  .legend{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:10px;}
+  .legend-item{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--sub); font-family:var(--mono);}
+  .legend-swatch{width:14px; height:3px; border-radius:2px; display:inline-block;}
+  .disclaimer{max-width:1500px; margin:24px auto 0; padding:0 18px; font-size:10px; color:var(--sub2); line-height:1.6; text-align:center;}
+  .holdings-table td, .holdings-table th{font-size:12px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MV</div>
+  <div class="brand">
+    <div class="name">MARKETVIEW</div>
+    <div class="meta" id="hdrMeta">— · — TICKERS · UNIVERSE V1</div>
+  </div>
+  <nav id="tabNav"></nav>
+  <div class="hdr-right">
+    <div class="pill" id="refreshBtn">⟳ REFRESH</div>
+    <div class="date" id="hdrDate"></div>
+  </div>
+</header>
+
+<main>
+  <div class="demo-flag" id="demoFlag">⚠ DEMO DATA — this board is running on generated sample data, not a live feed.</div>
+  <div id="tabContent"></div>
+</main>
+
+<div class="disclaimer">
+  Nothing on this website is financial advice. All content is for research and informational purposes only.
+  Data may be delayed, approximate, or incorrect. Do your own due diligence before making any investment decision.
+</div>
+
+<script>
+/* ============================== state & routing ============================== */
+const TABS = ["DAILY BOARD","THEMES","BREADTH","ETF GRID","RVOL","MOMENTUM","EXTENSION"];
+let DATA = {};
+let activeTab = TABS[0];
+let selectedTheme = null;
+let selectedEtf = null;
+
+function navigate(tab, opts={}, push=true){
+  activeTab = tab;
+  selectedTheme = opts.theme || null;
+  selectedEtf = opts.etf || null;
+  if(push){
+    const state = {tab, theme:selectedTheme, etf:selectedEtf};
+    history.pushState(state, "", "#" + encodeURIComponent(tab) + (selectedTheme?("/"+encodeURIComponent(selectedTheme)):"") + (selectedEtf?("/"+encodeURIComponent(selectedEtf)):""));
+  }
+  buildNav(); renderActiveTab(); window.scrollTo(0,0);
+}
+
+window.onpopstate = (e)=>{
+  const s = e.state;
+  if(s && s.tab){ navigate(s.tab, {theme:s.theme, etf:s.etf}, false); }
+  else { navigate(TABS[0], {}, false); }
+};
+
+/* ============================== helpers ============================== */
+function rand(min,max){return Math.random()*(max-min)+min;}
+function pick(arr,n){const c=[...arr]; const out=[]; while(out.length<n && c.length){out.push(c.splice(Math.floor(Math.random()*c.length),1)[0]);} return out;}
+function fmtPct(v,dec=2){const s=v>=0?"+":""; return s+v.toFixed(dec)+"%";}
+function cls(v){return v>=0?"up":"down";}
+function badgeClass(status){return {"DOMINANT":"b-dominant","STRONG":"b-strong","WEAK":"b-weak","DETERIORATING":"b-deteriorating","FADING":"b-fading"}[status]||"b-strong";}
+
+function sparkline(values, w=100, h=28){
+  if(!values || values.length<2) return "";
+  const min=Math.min(...values), max=Math.max(...values), range=(max-min)||1, step=w/(values.length-1);
+  const pts=values.map((v,i)=>`${(i*step).toFixed(1)},${(h-((v-min)/range)*h).toFixed(1)}`).join(" ");
+  const color=values[values.length-1]>=values[0]?"var(--green)":"var(--red)";
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+const CHART_COLORS = ["#4f8ef7","#3ecf8e","#e5566d","#e5a13c","#b07df7","#3ec9cf","#f772c8","#9acf3e"];
+
+function lineChart(series, labels, {w=900, h=280, yMin=null, yMax=null}={}){
+  // series: [{name, values, color}]
+  const all = series.flatMap(s=>s.values).filter(v=>v!=null);
+  if(!all.length) return "";
+  const lo = yMin!=null?yMin:Math.min(...all), hi = yMax!=null?yMax:Math.max(...all);
+  const range = (hi-lo)||1;
+  const padL=44, padR=12, padT=12, padB=26;
+  const iw=w-padL-padR, ih=h-padT-padB;
+  const n = Math.max(...series.map(s=>s.values.length));
+  const x = i => padL + (n>1 ? (i/(n-1))*iw : 0);
+  const y = v => padT + ih - ((v-lo)/range)*ih;
+  let grid="", axis="";
+  for(let g=0; g<=4; g++){
+    const gv = lo + (range*g/4);
+    const gy = y(gv);
+    grid += `<line x1="${padL}" y1="${gy}" x2="${w-padR}" y2="${gy}" stroke="#1e2740" stroke-width="1"/>`;
+    axis += `<text x="${padL-8}" y="${gy+3}" text-anchor="end" font-size="10" fill="#54617e" font-family="monospace">${Number(gv.toFixed(1))}</text>`;
+  }
+  let xlabels="";
+  if(labels && labels.length){
+    const every = Math.ceil(labels.length/6);
+    labels.forEach((lb,i)=>{ if(i%every===0) xlabels += `<text x="${x(i)}" y="${h-8}" text-anchor="middle" font-size="10" fill="#54617e" font-family="monospace">${lb}</text>`; });
+  }
+  const lines = series.map(s=>{
+    const pts = s.values.map((v,i)=> v==null?null:`${x(i).toFixed(1)},${y(v).toFixed(1)}`).filter(Boolean).join(" ");
+    return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto; display:block;">${grid}${axis}${xlabels}${lines}</svg>`;
+}
+
+function strengthBar(value, maxAbs, {centered=false}={}){
+  // returns an inline bar visual. centered=true draws from middle (for +/- values)
+  const pctv = Math.min(Math.abs(value)/maxAbs, 1)*100;
+  const color = value>=0 ? "var(--green)" : "var(--red)";
+  if(centered){
+    const half = pctv/2;
+    const left = value>=0 ? 50 : 50-half;
+    return `<span class="bar-track"><span class="bar-fill" style="left:${left}%; width:${half}%; background:${color};"></span><span style="position:absolute; left:50%; top:0; width:1px; height:100%; background:#2a3550;"></span></span>`;
+  }
+  return `<span class="bar-track"><span class="bar-fill" style="left:0; width:${pctv}%; background:${color};"></span></span>`;
+}
+
+/* ============================== ETF holdings reference ============================== */
+// Approximate top holdings with rough weights. Static reference list compiled 2026-07 --
+// NOT a live holdings feed; actual weightings drift over time.
+const HOLDINGS_ASOF = "2026-07 (static reference list)";
+const ETF_NAMES = {
+  XLK:"Technology", XLF:"Financials", XLE:"Energy", XLV:"Health Care",
+  XLI:"Industrials", XLY:"Consumer Discretionary", XLP:"Consumer Staples",
+  XLU:"Utilities", XLB:"Materials", XLRE:"Real Estate", XLC:"Communication Services",
+  SMH:"Semiconductors", KRE:"Regional Banks", IBB:"Biotech",
+  ARKK:"ARK Innovation", TAN:"Solar"
+};
+const ETF_HOLDINGS = {
+  XLK:[["MSFT",13],["AAPL",12.5],["NVDA",11],["AVGO",5],["CRM",2.5],["ADBE",2.3],["AMD",2.2],["CSCO",2]],
+  XLF:[["BRK.B",13],["JPM",10],["V",7.5],["MA",7],["BAC",4.5],["WFC",3],["GS",2.5],["SPGI",2.5]],
+  XLE:[["XOM",23],["CVX",16],["COP",8.5],["EOG",4.5],["SLB",4],["MPC",4],["PSX",3.5],["WMB",3.5]],
+  XLV:[["LLY",12],["UNH",9],["JNJ",7.5],["MRK",5],["ABBV",5],["TMO",4],["ABT",3.5],["ISRG",3.5]],
+  XLI:[["GE",4.5],["CAT",4.5],["RTX",4],["UNP",4],["HON",4],["DE",3],["BA",3],["ADP",3]],
+  XLY:[["AMZN",23],["TSLA",13],["HD",9],["MCD",4],["NKE",3],["LOW",3],["SBUX",2.5],["BKNG",2.5]],
+  XLP:[["PG",14],["KO",10],["PEP",9.5],["COST",9],["WMT",5],["PM",4.5],["MO",4],["CL",3]],
+  XLU:[["NEE",13],["SO",8],["DUK",7.5],["CEG",6],["AEP",4.5],["D",4],["EXC",3.5],["SRE",3.5]],
+  XLB:[["LIN",17],["SHW",7],["APD",5.5],["ECL",5],["FCX",4.5],["NEM",4],["DD",3.5],["NUE",3]],
+  XLRE:[["PLD",10],["AMT",9],["EQIX",8],["WELL",7],["DLR",5.5],["SPG",5],["O",4.5],["PSA",4]],
+  XLC:[["META",22],["GOOGL",12],["GOOG",10],["NFLX",5],["DIS",4.5],["CMCSA",4],["TMUS",4],["EA",2.5]],
+  SMH:[["NVDA",20],["TSM",12],["AVGO",8],["ASML",5],["AMD",4.5],["QCOM",4.5],["TXN",4],["MU",4]],
+  KRE:[["ZION",2.5],["CFG",2.5],["RF",2.5],["FITB",2.5],["MTB",2.5],["HBAN",2.5],["KEY",2.5],["CMA",2]],
+  IBB:[["VRTX",8.5],["REGN",8],["GILD",7],["AMGN",7],["MRNA",3.5],["BIIB",3],["ILMN",3],["SGEN",2.5]],
+  ARKK:[["TSLA",10],["COIN",8],["ROKU",7],["RBLX",5],["PATH",5],["DKNG",4.5],["U",4],["TWLO",3.5]],
+  TAN:[["FSLR",10],["ENPH",9],["SEDG",6],["RUN",5.5],["NOVA",4],["ARRY",4],["SHLS",3.5],["CSIQ",3.5]]
+};
+
+/* ============================== mock data (demo fallback) ============================== */
+const THEME_NAMES = ["Robotics","Software Infrastructure","Defensives","Energy","Biotech","Financials","EV/Autonomy","China Tech","Consumer Momentum","Datacenter REITs","Semiconductors","Optics","Industrials","Media & Streaming","Housing","Regional Banks","Cybersecurity","Gold Miners","Shipping","Agriculture"];
+const SECTOR_ETFS = Object.keys(ETF_HOLDINGS);
+const IDX = [{t:"SPY",s:"SPX"},{t:"QQQ",s:"NDX"},{t:"IWM",s:"R2K"},{t:"RSP",s:"EQUAL WEIGHT SPX"},{t:"DIA",s:"DJIA"}];
+
+function genData(){
+  const genericTickers = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","AVGO","JPM","XOM","LLY","V","UNH","HD","PG","MA","CVX","MRK","ABBV","PEP","COST","ADBE","CRM","NFLX","AMD","QCOM","TXN","INTC","IBM","GE"];
+  const dates = []; const today = new Date();
+  for(let i=21;i>=0;i--){ const d=new Date(today); d.setDate(d.getDate()-i); dates.push((d.getMonth()+1)+"/"+d.getDate()); }
+  const themes = THEME_NAMES.map(name=>{
+    const score = Math.floor(rand(20,100));
+    const delta = rand(-14,14);
+    let status="STRONG";
+    if(score>85) status="DOMINANT"; else if(score<45) status=delta<0?"DETERIORATING":"WEAK"; else if(delta<-6) status="FADING";
+    const count = Math.floor(rand(4,14));
+    const constituents = pick(genericTickers,count).map(t=>({t, ret1:rand(-3,3), ret5:rand(-6,6), dist50:rand(-8,8)}));
+    let sc = score + rand(-15,15); const scoreHist=[];
+    for(let i=0;i<22;i++){ sc = Math.min(100,Math.max(0, sc + rand(-4,4))); scoreHist.push(Math.round(sc)); }
+    scoreHist[21] = score;
+    return {name, count, score, delta, status, constituents, scoreHist};
+  }).sort((a,b)=>b.score-a.score);
+  const idx = IDX.map(i=>({...i, d1:rand(-2.2,1.5), d5:rand(-5,4), dist50:rand(-4,3), atrExt:rand(-2.2,2.2)}));
+  const etfs = SECTOR_ETFS.map(t=>{ let base=100, hist=[]; for(let i=0;i<22;i++){ base*=(1+rand(-1.5,1.5)/100); hist.push(Number(base.toFixed(2))); } return {t, d1:rand(-2.5,2.5), d5:rand(-6,6), rvol:rand(0.4,2.8), hist}; });
+  const momentum = pick(["NVDA","AVGO","PLTR","SMCI","CRWD","ANET","VRT","ISRG","LLY","TSM","MELI","SHOP","NOW","UBER","DDOG"],12).map(t=>({t, d1:rand(-1,4), d20:rand(-5,30), rvol:rand(0.8,3.2)}));
+  const rvolTbl = pick(["TSLA","AAPL","MSFT","AMZN","META","GOOGL","NFLX","AMD","INTC","XOM","JPM","BA","DIS","V","MA"],12).map(t=>({t, rvol:rand(0.5,4.5), d1:rand(-3,3)}));
+  const ext = pick(["COIN","MSTR","ARM","SNOW","ROKU","RIVN","SOFI","PLUG","AFRM","U","RBLX","DKNG"],10).map(t=>({t, extAtr:rand(-3,3.5), pctFrom50:rand(-25,25)}));
+  const regimeOptions=[{label:"RISK-OFF",cls:"risk-off"},{label:"NEUTRAL",cls:""},{label:"RISK-ON",cls:"risk-on"}];
+  const regime = Math.random()<0.4?regimeOptions[0]:(Math.random()<0.5?regimeOptions[1]:regimeOptions[2]);
+  return {regime, dominant:themes[0], fading:themes.find(t=>["DETERIORATING","FADING"].includes(t.status))||themes[themes.length-1],
+    newHighs:Math.floor(rand(5,40)), newLows:Math.floor(rand(30,220)), up3:Math.floor(rand(5,40)), down3:Math.floor(rand(10,50)),
+    pct20:rand(15,55), pct50:rand(15,55), pct200:rand(20,65), newHi20:Math.floor(rand(5,45)), newHi52:Math.floor(rand(0,15)),
+    totalNames:257, chartDates:dates, themes, idx, etfs, momentum, rvolTbl, ext, asOf:new Date()};
+}
+
+/* ============================== data load ============================== */
+function normalizeRealData(d){
+  d.dominant = d.themes[0];
+  d.fading = d.themes.find(t=>["DETERIORATING","FADING"].includes(t.status)) || d.themes[d.themes.length-1];
+  return d;
+}
+async function refreshData(){
+  try{
+    const res = await fetch("data.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("no data.json ("+res.status+")");
+    const real = await res.json();
+    DATA = normalizeRealData(real);
+    DATA.asOf = new Date(real.asOf);
+    document.getElementById("demoFlag").style.display="none";
+  }catch(e){
+    console.error("Marketview: falling back to demo data —", e.message);
+    DATA = genData();
+    document.getElementById("demoFlag").style.display="";
+  }
+  document.getElementById("hdrMeta").textContent = DATA.asOf.toISOString().slice(0,10)+" · "+DATA.totalNames+" TICKERS · UNIVERSE V1";
+  document.getElementById("hdrDate").textContent = DATA.asOf.toISOString().slice(0,10);
+  renderActiveTab();
+}
+
+/* ============================== nav ============================== */
+function buildNav(){
+  const nav = document.getElementById("tabNav");
+  nav.innerHTML="";
+  TABS.forEach(t=>{
+    const b=document.createElement("button");
+    b.textContent=t;
+    if(t===activeTab) b.classList.add("active");
+    b.onclick=()=>navigate(t);
+    nav.appendChild(b);
+  });
+}
+
+/* ============================== shared renderers ============================== */
+function themeLink(name){ return `<a href="#" class="theme-link" onclick="navigate('THEME_DETAIL',{theme:'${name.replace(/'/g,"\\'")}'}); return false;">${name}</a>`; }
+function etfLink(t){ return `<a href="#" class="etf-link" onclick="navigate('ETF_DETAIL',{etf:'${t}'}); return false;">${t}</a>`; }
+
+function themeRows(list){
+  return list.map((th,i)=>`
+    <tr>
+      <td class="rank">${i+1}</td>
+      <td class="theme-name">${themeLink(th.name)} <span class="cnt">${th.count}</span></td>
+      <td class="num" style="color:var(--green); font-weight:700;">${th.score}</td>
+      <td class="num ${cls(th.delta)}">${fmtPct(th.delta,1)}</td>
+      <td><span class="badge ${badgeClass(th.status)}">${th.status}</span></td>
+    </tr>`).join("");
+}
+
+/* ============================== tab renderers ============================== */
+function renderDailyBoard(){
+  const d = DATA;
+  const sortedByMove = [...d.themes].sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta));
+  return `
+  <div class="panel">
+    <div class="panel-head"><h2>REGIME READ</h2><span class="tag">AS OF ${d.asOf.toISOString().slice(0,10)}</span></div>
+    <div class="regime-cols">
+      <div class="rcol"><div class="lbl">REGIME</div><div class="big ${d.regime.cls}">${d.regime.label}</div>
+        <div class="sub">${d.pct50.toFixed(0)}% &gt; 50DMA · ${d.pct200.toFixed(0)}% &gt; 200DMA</div></div>
+      <div class="rcol"><div class="lbl">DOMINANT</div><div class="big">${themeLink(d.dominant.name)}</div>
+        <div class="sub">${themeLink(d.themes[1].name)} · ${themeLink(d.themes[2].name)}</div></div>
+      <div class="rcol"><div class="lbl">EMERGING</div><div class="big">—</div><div class="sub">no themes improving</div></div>
+      <div class="rcol"><div class="lbl">FADING</div><div class="big" style="color:var(--red);">${themeLink(d.fading.name)}</div>
+        <div class="sub">${themeLink(d.themes[d.themes.length-2].name)} · ${themeLink(d.themes[d.themes.length-3].name)}</div></div>
+      <div class="rcol"><div class="lbl">NEW HIGHS / LOWS</div><div class="big"><span class="up">${d.newHighs}</span> / <span class="down">${d.newLows}</span></div>
+        <div class="sub">52w highs: ${d.newHi52}</div></div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-head"><h2>INDEX &amp; BENCHMARK</h2><span class="tag">RET / DIST 50DMA / ATR EXT</span></div>
+      <div class="panel-body"><div class="idx-cols">
+        ${d.idx.map(i=>`<div class="idx-card"><div class="t1">${i.t}</div><div class="t2">${i.s}</div>
+          <div class="idx-row"><span class="k">1D</span><span class="${cls(i.d1)}">${fmtPct(i.d1)}</span></div>
+          <div class="idx-row"><span class="k">5D</span><span class="${cls(i.d5)}">${fmtPct(i.d5)}</span></div>
+          <div class="idx-row"><span class="k">&gt;50DMA</span><span class="${cls(i.dist50)}">${fmtPct(i.dist50,1)}</span></div>
+          <div class="idx-row"><span class="k">ATR EXT</span><span class="${cls(i.atrExt)}">${i.atrExt>=0?"+":""}${i.atrExt.toFixed(1)}</span></div>
+        </div>`).join("")}
+      </div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>UNIVERSE BREADTH</h2><span class="tag">EX-BENCHMARK</span></div>
+      <div class="panel-body"><div class="breadth-grid">
+        <div class="breadth-row"><span>% &gt; 20DMA</span><span class="v">${d.pct20.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>% &gt; 50DMA</span><span class="v">${d.pct50.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>% &gt; 200DMA</span><span class="v">${d.pct200.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>Total names</span><span class="v">${d.totalNames}</span></div>
+        <div class="breadth-row"><span>New 20D highs</span><span class="v">${d.newHi20}</span></div>
+        <div class="breadth-row"><span>New 52W highs</span><span class="v">${d.newHi52}</span></div>
+        <div class="breadth-row"><span>Up 3%+</span><span class="v up">${d.up3}</span></div>
+        <div class="breadth-row"><span>Down 3%+</span><span class="v down">${d.down3}</span></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-head"><h2>DOMINANT THEMES</h2><span class="tag">SCORE / 1D Δ / STATUS</span></div>
+      <div class="panel-body" style="padding:6px 10px;"><table><tbody>${themeRows(d.themes.slice(0,8))}</tbody></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>EMERGING &amp; FADING</h2><span class="tag">BIGGEST 1D Δ MOVES</span></div>
+      <div class="panel-body" style="padding:6px 10px;"><table><tbody>${themeRows(sortedByMove.slice(0,8))}</tbody></table></div>
+    </div>
+  </div>`;
+}
+
+function renderThemes(){
+  const top8 = DATA.themes.slice(0,8);
+  const haveHist = top8.every(t=>t.scoreHist && t.scoreHist.length>2);
+  const chartSeries = top8.map((t,i)=>({name:t.name, values:t.scoreHist||[], color:CHART_COLORS[i%CHART_COLORS.length]}));
+  return `<div class="panel">
+    <div class="panel-head"><h2>ALL THEMES</h2><span class="tag">${DATA.themes.length} TRACKED · CLICK A THEME FOR ITS STOCKS</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th></th><th>THEME</th><th class="num">SCORE</th><th class="num">1D Δ</th><th>STATUS</th></tr></thead>
+      <tbody>${themeRows(DATA.themes)}</tbody></table>
+    </div></div>
+  <div class="panel">
+    <div class="panel-head"><h2>THEME SCORES — PAST MONTH</h2><span class="tag">TOP 8 BY CURRENT SCORE · 0–100</span></div>
+    <div class="panel-body">
+      ${haveHist ? lineChart(chartSeries, DATA.chartDates, {yMin:0, yMax:100}) + `
+      <div class="legend">${chartSeries.map(s=>`<span class="legend-item"><span class="legend-swatch" style="background:${s.color};"></span>${s.name}</span>`).join("")}</div>`
+      : `<div class="placeholder">Score history will appear after the next daily data update runs with the latest script version.</div>`}
+    </div></div>`;
+}
+
+function renderBreadth(){
+  const d = DATA;
+  return `<div class="panel">
+    <div class="panel-head"><h2>BREADTH DETAIL</h2><span class="tag">EX-BENCHMARK</span></div>
+    <div class="panel-body">
+      <div class="breadth-grid">
+        <div class="breadth-row"><span>% &gt; 20DMA</span><span class="v">${d.pct20.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>% &gt; 50DMA</span><span class="v">${d.pct50.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>% &gt; 200DMA</span><span class="v">${d.pct200.toFixed(1)}%</span></div>
+        <div class="breadth-row"><span>Total names</span><span class="v">${d.totalNames}</span></div>
+        <div class="breadth-row"><span>New 20D highs</span><span class="v">${d.newHi20}</span></div>
+        <div class="breadth-row"><span>New 52W highs</span><span class="v">${d.newHi52}</span></div>
+        <div class="breadth-row"><span>New lows</span><span class="v down">${d.newLows}</span></div>
+        <div class="breadth-row"><span>Up 3%+ / Down 3%+</span><span class="v"><span class="up">${d.up3}</span> / <span class="down">${d.down3}</span></span></div>
+      </div>
+    </div></div>
+  <div class="explainer">
+    <b>What is breadth?</b> Breadth measures how many stocks are participating in a move, rather than just what the index is doing.
+    An index can rise while most of its stocks fall (a few giants doing the lifting) — that's <b>narrow</b> breadth, and it tends to be fragile.
+    When most stocks are above their moving averages and new highs outnumber new lows, breadth is <b>broad</b> and the trend has more support underneath it.<br><br>
+    <b>How to read this page:</b> "% &gt; 20DMA / 50DMA / 200DMA" is the share of the tracked universe trading above its 20-day, 50-day, and 200-day moving averages —
+    short-, medium-, and long-term health checks. High readings (say, above ~60%) suggest widespread strength; low readings (below ~40%) suggest weakness spreading under the surface.
+    "New highs vs new lows" and "Up 3%+ vs Down 3%+" show whether big moves are skewing bullish or bearish on the day.
+    Deteriorating breadth while indexes hold up is a classic early warning — the "cracks" often show up here before the index reflects them.
+  </div>`;
+}
+
+function renderETFGrid(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>ETF GRID</h2><span class="tag">SECTOR SPDRS + FOCUS · CLICK A TICKER FOR HOLDINGS</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">TREND (1M)</th><th class="num">1D</th><th class="num">5D</th><th class="num">RVOL</th></tr></thead>
+      <tbody>${DATA.etfs.map(e=>`<tr>
+        <td class="theme-name">${etfLink(e.t)}<div style="font-size:10.5px; color:var(--sub2); font-weight:500; margin-top:2px;">${ETF_NAMES[e.t]||""}</div></td>
+        <td class="num spark-cell">${sparkline(e.hist||[e.d5,e.d1])}</td>
+        <td class="num ${cls(e.d1)}">${fmtPct(e.d1)}</td>
+        <td class="num ${cls(e.d5)}">${fmtPct(e.d5)}</td>
+        <td class="num">${e.rvol.toFixed(2)}x</td>
+      </tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function renderRVOL(){
+  return `<div class="panel">
+    <div class="panel-head"><h2>RELATIVE VOLUME</h2><span class="tag">TOP MOVERS BY RVOL</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">RVOL</th><th class="num">1D</th></tr></thead>
+      <tbody>${DATA.rvolTbl.slice().sort((a,b)=>b.rvol-a.rvol).map(r=>`<tr><td class="theme-name">${r.t}</td><td class="num" style="color:var(--amber); font-weight:700;">${r.rvol.toFixed(2)}x</td><td class="num ${cls(r.d1)}">${fmtPct(r.d1)}</td></tr>`).join("")}</tbody></table>
+    </div></div>
+  <div class="explainer">
+    <b>What is relative volume (RVOL)?</b> RVOL compares today's trading volume against the stock's own recent average (here, its 20-day average).
+    An RVOL of 1.00x means a normal day; 2.50x means two-and-a-half times the usual number of shares changed hands.<br><br>
+    <b>Why it matters:</b> price moves on heavy volume carry more conviction — a lot of money agreed on the move. A big price move on <i>low</i> RVOL is easier to fade,
+    while an ordinary-looking move on very high RVOL can mark the start of something (institutions building or exiting positions, news being digested, a level breaking).
+    High RVOL by itself isn't bullish or bearish — pair it with the 1D column to see which way the crowd leaned.
+  </div>`;
+}
+
+function renderMomentum(){
+  const mom = DATA.momentum.slice().sort((a,b)=>b.d20-a.d20);
+  const maxAbs = Math.max(...mom.map(m=>Math.abs(m.d20)), 1);
+  const clean = mom.filter(m=>m.d20>10);
+  return `<div class="panel">
+    <div class="panel-head"><h2>MOMENTUM LEADERS</h2><span class="tag">RANKED BY 20-DAY CHANGE</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">20D</th><th class="num">STRENGTH</th><th class="num">RVOL</th></tr></thead>
+      <tbody>${mom.map(m=>`<tr>
+        <td class="theme-name">${m.t}</td>
+        <td class="num ${cls(m.d1)}">${fmtPct(m.d1)}</td>
+        <td class="num ${cls(m.d20)}">${fmtPct(m.d20,1)}</td>
+        <td class="num">${strengthBar(m.d20, maxAbs)}</td>
+        <td class="num">${m.rvol.toFixed(2)}x</td>
+      </tr>`).join("")}</tbody></table>
+    </div></div>
+  <div class="panel">
+    <div class="panel-head"><h2>CLEAN MOMENTUM</h2><span class="tag">20D &gt; +10% — THE STRONGEST OF THE STRONG</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      ${clean.length ? `<table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">20D</th><th class="num">STRENGTH</th></tr></thead>
+      <tbody>${clean.map(m=>`<tr><td class="theme-name">${m.t}</td><td class="num ${cls(m.d1)}">${fmtPct(m.d1)}</td><td class="num up">${fmtPct(m.d20,1)}</td><td class="num">${strengthBar(m.d20, maxAbs)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="placeholder">No names currently clear the +10% / 20-day bar — momentum is thin right now, which is itself information.</div>`}
+    </div></div>
+  <div class="explainer">
+    <b>What is momentum?</b> Momentum is the tendency of stocks that have been going up to keep going up (and vice versa) over intermediate timeframes.
+    This page ranks the tracked universe by 20-day price change — roughly one trading month.<br><br>
+    <b>How to read it:</b> the strength bar shows each name's 20-day move relative to the biggest mover on the board, so you can see at a glance whether
+    leadership is concentrated in one or two names or spread across many. The <b>Clean Momentum</b> list below filters to names up more than 10% in a month —
+    the true leaders. A long clean list suggests a healthy risk appetite; a short or empty one, especially alongside weak breadth, suggests leadership is thinning out.
+    Check RVOL too: momentum backed by heavy volume is more durable than a quiet drift.
+  </div>`;
+}
+
+function renderExtension(){
+  const ext = DATA.ext.slice().sort((a,b)=>Math.abs(b.extAtr)-Math.abs(a.extAtr));
+  const maxAbs = Math.max(...ext.map(e=>Math.abs(e.extAtr)), 1);
+  return `<div class="panel">
+    <div class="panel-head"><h2>EXTENSION</h2><span class="tag">MOST STRETCHED FROM THE 50DMA, IN ATR UNITS</span></div>
+    <div class="panel-body" style="padding:6px 10px;">
+      <table><thead><tr><th>TICKER</th><th class="num">ATR EXT</th><th class="num">STRETCH</th><th class="num">% FROM 50DMA</th></tr></thead>
+      <tbody>${ext.map(e=>`<tr>
+        <td class="theme-name">${e.t}</td>
+        <td class="num ${cls(e.extAtr)}">${e.extAtr>=0?"+":""}${e.extAtr.toFixed(1)}</td>
+        <td class="num">${strengthBar(e.extAtr, maxAbs, {centered:true})}</td>
+        <td class="num ${cls(e.pctFrom50)}">${fmtPct(e.pctFrom50,1)}</td>
+      </tr>`).join("")}</tbody></table>
+    </div></div>
+  <div class="explainer">
+    <b>What is extension?</b> Extension measures how far a stock has traveled from its 50-day moving average, expressed in units of its own average daily range (ATR).
+    Using ATR instead of raw percentage puts a volatile stock and a sleepy one on the same scale — being 10% above the 50DMA is nothing for a high-beta name but a huge stretch for a utility.<br><br>
+    <b>How to read it:</b> the stretch bar is centered — bars to the right (green) are extended <i>above</i> the average, bars to the left (red) are stretched <i>below</i> it.
+    Heavily extended names are like a stretched rubber band: they can keep going, but the odds of a snap-back (mean reversion) grow with the stretch.
+    Traders often use extension to avoid chasing entries on the upside, or to hunt for bounce candidates on the downside — not as a signal by itself, but as a "how late am I?" check.
+  </div>`;
+}
+
+function renderThemeDetail(){
+  const theme = DATA.themes.find(t=>t.name===selectedTheme);
+  const list = (theme && theme.constituents)||[];
+  return `<div class="panel">
+    <div class="panel-head"><h2>${selectedTheme?selectedTheme.toUpperCase():"THEME"}</h2>
+      <span class="tag">${theme?theme.count+" NAMES · SCORE "+theme.score:""}</span></div>
+    <div class="panel-body">
+      <a href="#" class="back-link" onclick="history.back(); return false;">‹ Back</a>
+      ${list.length?`<table><thead><tr><th>TICKER</th><th class="num">1D</th><th class="num">5D</th><th class="num">% FROM 50DMA</th></tr></thead>
+        <tbody>${list.map(c=>`<tr><td class="theme-name">${c.t}</td><td class="num ${cls(c.ret1)}">${fmtPct(c.ret1)}</td><td class="num ${cls(c.ret5)}">${fmtPct(c.ret5)}</td><td class="num ${cls(c.dist50)}">${fmtPct(c.dist50,1)}</td></tr>`).join("")}</tbody></table>`
+      :`<div class="placeholder">No constituent list available for this theme in the current data.</div>`}
+    </div></div>`;
+}
+
+function renderEtfDetail(){
+  const t = selectedEtf;
+  const stats = DATA.etfs.find(e=>e.t===t);
+  const holdings = ETF_HOLDINGS[t]||[];
+  const hist = stats && stats.hist && stats.hist.length>2 ? stats.hist : null;
+  return `<div class="panel">
+    <div class="panel-head"><h2>${t} <span style="color:var(--sub2); font-weight:600;">— ${ETF_NAMES[t]||""}</span></h2><span class="tag">DETAIL</span></div>
+    <div class="panel-body">
+      <a href="#" class="back-link" onclick="history.back(); return false;">‹ Back</a>
+      ${stats?`<div class="idx-cols" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
+        <div class="idx-card"><div class="t2">1D</div><div class="t1 ${cls(stats.d1)}">${fmtPct(stats.d1)}</div></div>
+        <div class="idx-card"><div class="t2">5D</div><div class="t1 ${cls(stats.d5)}">${fmtPct(stats.d5)}</div></div>
+        <div class="idx-card"><div class="t2">RVOL</div><div class="t1">${stats.rvol.toFixed(2)}x</div></div>
+      </div>`:""}
+      ${hist?`<div style="margin-bottom:18px;">
+        <div style="font-size:10px; letter-spacing:.5px; color:var(--sub2); font-weight:700; margin-bottom:6px;">DAILY CLOSE — PAST MONTH</div>
+        ${lineChart([{name:t, values:hist, color:"#4f8ef7"}], DATA.chartDates, {h:220})}
+      </div>`:""}
+      ${holdings.length?`
+      <div style="font-size:10px; letter-spacing:.5px; color:var(--sub2); font-weight:700; margin-bottom:6px;">TOP HOLDINGS</div>
+      <table class="holdings-table"><thead><tr><th>TICKER</th><th class="num">APPROX. WEIGHT</th></tr></thead>
+      <tbody>${holdings.map(([h,w])=>`<tr><td class="theme-name">${h}</td><td class="num">${w.toFixed(1)}%</td></tr>`).join("")}</tbody></table>
+      <div style="margin-top:10px; font-size:11px; color:var(--sub2);">Holdings last updated: ${HOLDINGS_ASOF}. Approximate weights — not a live holdings feed; actual weightings drift over time. Check the fund provider's site for exact current holdings.</div>`
+      :`<div class="placeholder">No holdings reference on file for ${t}.</div>`}
+    </div></div>`;
+}
+
+function renderActiveTab(){
+  const map = {
+    "DAILY BOARD":renderDailyBoard, "THEMES":renderThemes, "BREADTH":renderBreadth,
+    "ETF GRID":renderETFGrid, "RVOL":renderRVOL, "MOMENTUM":renderMomentum,
+    "EXTENSION":renderExtension, "THEME_DETAIL":renderThemeDetail, "ETF_DETAIL":renderEtfDetail
+  };
+  if(!DATA || !DATA.themes){ return; }
+  document.getElementById("tabContent").innerHTML = (map[activeTab]||renderDailyBoard)();
+}
+
+document.getElementById("refreshBtn").onclick = ()=>{ location.reload(); };
+
+history.replaceState({tab:activeTab, theme:null, etf:null}, "", location.pathname);
+buildNav();
+refreshData();
+</script>
+</body>
+</html>
