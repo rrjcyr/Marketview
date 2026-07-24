@@ -204,6 +204,13 @@ function strengthBar(value, maxAbs, {centered=false}={}){
 // Approximate top holdings with rough weights. Static reference list compiled 2026-07 --
 // NOT a live holdings feed; actual weightings drift over time.
 const HOLDINGS_ASOF = "2026-07 (static reference list)";
+const ETF_NAMES = {
+  XLK:"Technology", XLF:"Financials", XLE:"Energy", XLV:"Health Care",
+  XLI:"Industrials", XLY:"Consumer Discretionary", XLP:"Consumer Staples",
+  XLU:"Utilities", XLB:"Materials", XLRE:"Real Estate", XLC:"Communication Services",
+  SMH:"Semiconductors", KRE:"Regional Banks", IBB:"Biotech",
+  ARKK:"ARK Innovation", TAN:"Solar"
+};
 const ETF_HOLDINGS = {
   XLK:[["MSFT",13],["AAPL",12.5],["NVDA",11],["AVGO",5],["CRM",2.5],["ADBE",2.3],["AMD",2.2],["CSCO",2]],
   XLF:[["BRK.B",13],["JPM",10],["V",7.5],["MA",7],["BAC",4.5],["WFC",3],["GS",2.5],["SPGI",2.5]],
@@ -420,7 +427,7 @@ function renderETFGrid(){
     <div class="panel-body" style="padding:6px 10px;">
       <table><thead><tr><th>TICKER</th><th class="num">TREND (1M)</th><th class="num">1D</th><th class="num">5D</th><th class="num">RVOL</th></tr></thead>
       <tbody>${DATA.etfs.map(e=>`<tr>
-        <td class="theme-name">${etfLink(e.t)}</td>
+        <td class="theme-name">${etfLink(e.t)}<div style="font-size:10.5px; color:var(--sub2); font-weight:500; margin-top:2px;">${ETF_NAMES[e.t]||""}</div></td>
         <td class="num spark-cell">${sparkline(e.hist||[e.d5,e.d1])}</td>
         <td class="num ${cls(e.d1)}">${fmtPct(e.d1)}</td>
         <td class="num ${cls(e.d5)}">${fmtPct(e.d5)}</td>
@@ -521,7 +528,7 @@ function renderEtfDetail(){
   const holdings = ETF_HOLDINGS[t]||[];
   const hist = stats && stats.hist && stats.hist.length>2 ? stats.hist : null;
   return `<div class="panel">
-    <div class="panel-head"><h2>${t}</h2><span class="tag">DETAIL</span></div>
+    <div class="panel-head"><h2>${t} <span style="color:var(--sub2); font-weight:600;">— ${ETF_NAMES[t]||""}</span></h2><span class="tag">DETAIL</span></div>
     <div class="panel-body">
       <a href="#" class="back-link" onclick="history.back(); return false;">‹ Back</a>
       ${stats?`<div class="idx-cols" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
