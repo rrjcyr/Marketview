@@ -125,10 +125,17 @@ def stats_for_ticker(hist):
         atr_ext = (last - sma50) / atr if atr else 0.0
         above20 = last > sma20
         above50 = last > sma50
-        hist15 = [round(float(x), 2) for x in c.tail(15).tolist()]
+        hist15 = [round(float(x), 2) for x in c.tail(22).tolist()]
+        # daily series (last 22 rows) used for theme score history
+        sma20_s = close.rolling(20, min_periods=10).mean()
+        sma50_s = close.rolling(50, min_periods=20).mean()
+        above20_s = (close > sma20_s).tail(22)
+        above50_s = (close > sma50_s).tail(22)
+        ret5_s = (close.pct_change(5) * 100).tail(22)
         return dict(last=last, ret1=ret1, ret5=ret5, ret20=ret20, rvol=rvol,
                     dist50=dist50, atr_ext=atr_ext, above20=above20, above50=above50,
-                    hist15=hist15)
+                    hist15=hist15,
+                    above20_series=above20_s, above50_series=above50_s, ret5_series=ret5_s)
 
     today = snapshot(len(close))
     yesterday = snapshot(len(close) - 1)
@@ -215,9 +222,33 @@ def build():
             for t, s in theme_members_with_ticker.get(theme, [])
         ]
         constituents.sort(key=lambda x: -x["ret1"])
+
+        # score history over the last ~22 trading days
+        score_hist = []
+        pairs = theme_members_with_ticker.get(theme, [])
+        if pairs:
+            a20 = pd.concat([s["above20_series"] for _, s in pairs], axis=1)
+            a50 = pd.concat([s["above50_series"] for _, s in pairs], axis=1)
+            r5 = pd.concat([s["ret5_series"] for _, s in pairs], axis=1)
+            for i in range(len(a50)):
+                p50 = 100 * a50.iloc[i].mean()
+                p20 = 100 * a20.iloc[i].mean()
+                ar5 = r5.iloc[i].mean()
+                if pd.isna(ar5):
+                    ar5 = 0.0
+                sc = 0.5 * p50 + 0.3 * p20 + 0.2 * min(max(ar5 * 10 + 50, 0), 100)
+                score_hist.append(round(float(sc)))
         themes.append(dict(name=theme, count=len(members), score=score, delta=delta, status=status,
-                            constituents=constituents))
+                            constituents=constituents, scoreHist=score_hist))
     themes.sort(key=lambda x: -x["score"])
+
+    # date labels for the score-history chart (use SPY's index as reference)
+    chart_dates = []
+    try:
+        spy_hist = raw["SPY"] if isinstance(raw.columns, pd.MultiIndex) else raw
+        chart_dates = [d.strftime("%m/%d") for d in spy_hist.dropna(subset=["Close"]).tail(22).index]
+    except Exception:
+        pass
 
     idx_out = []
     for t, label in INDEXES.items():
@@ -255,6 +286,7 @@ def build():
         pct20=round(pct20, 1), pct50=round(pct50, 1), pct200=round(pct200, 1),
         newHi20=new_hi20, newHi52=new_hi52, newHighs=new_hi20, newLows=new_lows,
         up3=up3, down3=down3,
+        chartDates=chart_dates,
         themes=themes, idx=idx_out, etfs=etf_out,
         momentum=momentum, rvolTbl=rvol_tbl, ext=ext_tbl,
     )
